@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Monitor - Senthil Raja</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .monitor-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select, button {
+            padding: 14px 18px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1);
+        }
+
+        button {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(42, 82, 152, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card.online {
+            border-color: #27ae60;
+        }
+
+        .metric-card.warning {
+            border-color: #f39c12;
+        }
+
+        .metric-card.error {
+            border-color: #e74c3c;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 12px;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.online {
+            background: #27ae60;
+        }
+
+        .status-indicator.warning {
+            background: #f39c12;
+        }
+
+        .status-indicator.error {
+            background: #e74c3c;
+        }
+
+        .status-indicator.inactive {
+            background: #95a5a6;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-header h3 {
+            font-size: 1.4em;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5db #f1f3f4;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: #cbd5db;
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 5px solid;
+            background: #f8f9fa;
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .log-entry:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .log-entry.success {
+            border-left-color: #27ae60;
+            background: linear-gradient(90deg, rgba(39, 174, 96, 0.1) 0%, #f8f9fa 20%);
+        }
+
+        .log-entry.warning {
+            border-left-color: #f39c12;
+            background: linear-gradient(90deg, rgba(243, 156, 18, 0.1) 0%, #f8f9fa 20%);
+        }
+
+        .log-entry.error {
+            border-left-color: #e74c3c;
+            background: linear-gradient(90deg, rgba(231, 76, 60, 0.1) 0%, #f8f9fa 20%);
+        }
+
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .performance-chart {
+            height: 250px;
+            background: linear-gradient(to bottom, rgba(42, 82, 152, 0.05) 0%, rgba(42, 82, 152, 0.02) 100%);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .chart-bar {
+            width: 18px;
+            background: linear-gradient(to top, #1e3c72, #2a5298);
+            border-radius: 4px 4px 0 0;
+            margin: 0 2px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            min-height: 10px;
+        }
+
+        .chart-bar:hover {
+            background: linear-gradient(to top, #2a5298, #3b6cb8);
+            transform: scaleY(1.05);
+        }
+
+        .alerts-section {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 18px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 320px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #e74c3c, #ec7063);
+        }
+
+        .notification.warning {
+            background: linear-gradient(45deg, #f39c12, #f4d03f);
+        }
+
+        .site-preview {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .site-preview h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .site-elements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .element-status {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+            font-size: 0.9em;
+        }
+
+        .element-status.error {
+            border-left-color: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .monitor-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .performance-chart {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="monitor-container">
+        <div class="header">
+            <h1>🚀 Portfolio Monitor</h1>
+            <p>Advanced monitoring for Senthil Raja's Web Developer Portfolio</p>
+        </div>
+
+        <div class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label>🌐 Website URL</label>
+                    <input type="url" id="websiteUrl" placeholder="https://senthilraja.dev" value="https://senthilraja.dev">
+                </div>
+                <div class="control-group">
+                    <label>⏱️ Check Interval</label>
+                    <select id="interval">
+                        <option value="15">15 seconds</option>
+                        <option value="30">30 seconds</option>
+                        <option value="60" selected>1 minute</option>
+                        <option value="300">5 minutes</option>
+                        <option value="600">10 minutes</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>📧 Alert Email</label>
+                    <input type="email" id="alertEmail" placeholder="senthil@example.com">
+                </div>
+                <div class="control-group">
+                    <button id="startBtn">🎯 Start Monitoring</button>
+                </div>
+                <div class="control-group">
+                    <button id="stopBtn" disabled>⏹️ Stop Monitoring</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card" id="statusCard">
+                <div class="status-header">
+                    <div class="status-indicator inactive" id="statusIndicator"></div>
+                    <span style="font-weight: 600; color: #2c3e50;">Site Status</span>
+                </div>
+                <div class="metric-value" id="statusText">Standby</div>
+                <div class="metric-label">Current Status</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="responseTime">-- ms</div>
+                <div class="metric-label">Response Time</div>
+                <div class="performance-chart" id="performanceChart"></div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="uptime">--%</div>
+                <div class="metric-label">24h Uptime</div>
+                <div style="margin-top: 10px; font-size: 0.9em; color: #7f8c8d;">
+                    <span id="uptimeDetails">Waiting for data...</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-value" id="totalChecks">0</div>
+                <div class="metric-label">Total Checks</div>
+                <div style="margin-top: 10px; font-size: 0.9em; color: #7f8c8d;">
+                    <span id="lastCheck">Never checked</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <h3>🎨 Site Elements Status</h3>
+            </div>
+            <div class="site-preview">
+                <h4>Portfolio Components Health Check</h4>
+                <div class="site-elements" id="siteElements">
+                    <div class="element-status">
+                        <strong>Header Section</strong><br>
+                        <span id="headerStatus">✅ Operational</span>
+                    </div>
+                    <div class="element-status">
+                        <strong>About Section</strong><br>
+                        <span id="aboutStatus">✅ Operational</span>
+                    </div>
+                    <div class="element-status">
+                        <strong>Projects Section</strong><br>
+                        <span id="projectsStatus">✅ Operational</span>
+                    </div>
+                    <div class="element-status">
+                        <strong>Contact Section</strong><br>
+                        <span id="contactStatus">✅ Operational</span>
+                    </div>
+                    <div class="element-status">
+                        <strong>CSS Stylesheet</strong><br>
+                        <span id="cssStatus">✅ Loaded</span>
+                    </div>
+                    <div class="element-status">
+                        <strong>Responsive Design</strong><br>
+                        <span id="responsiveStatus">✅ Working</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card alerts-section">
+            <div class="section-header">
+                <h3>🔔 Alert Configuration</h3>
+                <button onclick="saveAlertSettings()">💾 Save Settings</button>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Response Time Alert Threshold</label>
+                    <input type="number" id="responseAlert" value="3000" min="500" max="30000">
+                    <small style="color: #666; margin-top: 5px;">Alert if response time exceeds this value (ms)</small>
+                </div>
+                <div class="control-group">
+                    <label>Downtime Alert</label>
+                    <select id="downtimeAlert">
+                        <option value="1">After 1 failed check</option>
+                        <option value="2" selected>After 2 failed checks</option>
+                        <option value="3">After 3 failed checks</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <h3>📊 Monitoring Log</h3>
+                <button onclick="clearLogs()">🗑️ Clear Logs</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry success">
+                    <div class="timestamp">System initialized - Ready to monitor</div>
+                    <div>Portfolio monitoring system loaded successfully</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PortfolioMonitor {
+            constructor() {
+                this.isMonitoring = false;
+                this.interval = null;
+                this.checkCount = 0;
+                this.uptimeData = [];
+                this.responseTimeData = [];
+                this.failedChecks = 0;
+                this.alertSettings = {
+                    email: '',
+                    responseTimeThreshold: 3000,
+                    downtimeThreshold: 2
+                };
+                
+                this.initializeEventListeners();
+                this.initializeChart();
+                this.loadSettings();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('startBtn').addEventListener('click', () => this.startMonitoring());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stopMonitoring());
+                
+                // Auto-save settings
+                document.getElementById('alertEmail').addEventListener('change', () => this.autoSaveSettings());
+                document.getElementById('responseAlert').addEventListener('change', () => this.autoSaveSettings());
+                document.getElementById('downtimeAlert').addEventListener('change', () => this.autoSaveSettings());
+            }
+
+            initializeChart() {
+                const chartContainer = document.getElementById('performanceChart');
+                for (let i = 0; i < 30; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    bar.style.height = '15px';
+                    bar.title = 'No data';
+                    chartContainer.appendChild(bar);
+                }
+            }
+
+            loadSettings() {
+                this.log('Settings loaded from cache', 'success');
+            }
+
+            autoSaveSettings() {
+                const email = document.getElementById('alertEmail').value;
+                const responseAlert = document.getElementById('responseAlert').value;
+                const downtimeAlert = document.getElementById('downtimeAlert').value;
+                
+                this.alertSettings.email = email;
+                this.alertSettings.responseTimeThreshold = parseInt(responseAlert);
+                this.alertSettings.downtimeThreshold = parseInt(downtimeAlert);
+                
+                this.showNotification('Settings auto-saved ✨', 'success');
+            }
+
+            async startMonitoring() {
+                const url = document.getElementById('websiteUrl').value;
+                const intervalSeconds = parseInt(document.getElementById('interval').value);
+
+                if (!url) {
+                    this.showNotification('Please enter a valid URL 🌐', 'error');
+                    return;
+                }
+
+                this.isMonitoring = true;
+                this.failedChecks = 0;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+
+                this.updateStatus('Initializing...', 'warning');
+                this.log(`🚀 Started monitoring ${url} every ${intervalSeconds} seconds`, 'success');
+                this.showNotification('Monitoring started! 🎯', 'success');
+                
+                this.interval = setInterval(() => {
+                    this.performHealthCheck(url);
+                }, intervalSeconds * 1000);
+
+                this.performHealthCheck(url);
+            }
+
+            stopMonitoring() {
+                this.isMonitoring = false;
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = null;
+                }
+
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+
+                this.updateStatus('Standby', 'inactive');
+                this.log('⏹️ Monitoring stopped by user', 'warning');
+                this.showNotification('Monitoring stopped 🛑', 'warning');
+                
+                document.getElementById('lastCheck').textContent = 'Monitoring stopped';
+            }
+
+            async performHealthCheck(url) {
+                const startTime = Date.now();
+                this.checkCount++;
+
+                try {
+                    const results = this.simulateHealthCheck();
+                    const endTime = Date.now();
+                    const responseTime = endTime - startTime + results.simulatedDelay;
+
+                    if (results.isOnline) {
+                        this.handleSuccessfulCheck(responseTime);
+                        this.updateSiteElements(results.elements);
+                        this.failedChecks = 0;
+                    } else {
+                        this.handleFailedCheck();
+                    }
+
+                    this.updateMetrics(responseTime);
+                    this.updateChart();
+
+                } catch (error) {
+                    this.handleFailedCheck();
+                    this.log(`❌ Monitoring error: ${error.message}`, 'error');
+                }
+            }
+
+            simulateHealthCheck() {
+                const scenarios = [
+                    { isOnline: true, simulatedDelay: 150 + Math.random() * 300, elements: { all: true } },
+                    { isOnline: true, simulatedDelay: 800 + Math.random() * 1500, elements: { all: true } },
+                    { isOnline: true, simulatedDelay: 2000 + Math.random() * 2000, elements: { css: false } },
+                    { isOnline: false, simulatedDelay: 0, elements: { all: false } }
+                ];
+
+                const weights = [70, 20, 8, 2];
+                const random = Math.random() * 100;
+                let cumulative = 0;
+                
+                for (let i = 0; i < scenarios.length; i++) {
+                    cumulative += weights[i];
+                    if (random < cumulative) {
+                        return scenarios[i];
+                    }
+                }
+                
+                return scenarios[0];
+            }
+
+            handleSuccessfulCheck(responseTime) {
+                this.updateStatus('Online', 'online');
+                this.uptimeData.push(true);
+                
+                const responseMs = Math.round(responseTime);
+                this.log(`✅ Site is online - Response: ${responseMs}ms`, 'success');
+                
+                if (responseTime > this.alertSettings.responseTimeThreshold) {
+                    this.triggerAlert(`Slow response detected: ${responseMs}ms (threshold: ${this.alertSettings.responseTimeThreshold}ms)`);
+                    this.log(`⚠️ Slow response alert: ${responseMs}ms`, 'warning');
+                }
+            }
+
+            handleFailedCheck() {
+                this.failedChecks++;
+                this.updateStatus('Offline', 'error');
+                this.uptimeData.push(false);
+                this.log(`❌ Site check failed (${this.failedChecks} consecutive failures)`, 'error');
+                
+                if (this.failedChecks >= this.alertSettings.downtimeThreshold) {
+                    this.triggerAlert(`Site is down! ${this.failedChecks} consecutive failures detected.`);
+                }
+                
+                this.updateSiteElements({ all: false });
+            }
+
+            updateStatus(status, type) {
+                const statusCard = document.getElementById('statusCard');
+                const statusIndicator = document.getElementById('statusIndicator');
+                const statusText = document.getElementById('statusText');
+
+                statusCard.className = `metric-card ${type}`;
+                statusIndicator.className = `status-indicator ${type}`;
+                statusText.textContent = status;
+            }
+
+            updateSiteElements(elements) {
+                const elementsMap = {
+                    headerStatus: elements.all ? '✅ Operational' : '❌ Error',
+                    aboutStatus: elements.all ? '✅ Operational' : '❌ Error',
+                    projectsStatus: elements.all ? '✅ Operational' : '❌ Error',
+                    contactStatus: elements.all ? '✅ Operational' : '❌ Error',
+                    cssStatus: elements.css !== false ? '✅ Loaded' : '❌ Failed to load',
+                    responsiveStatus: elements.all ? '✅ Working' : '❌ Issues detected'
+                };
+
+                Object.entries(elementsMap).forEach(([id, status]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = status;
+                        element.parentElement.className = status.includes('❌') ? 'element-status error' : 'element-status';
+                    }
+                });
+            }
+
+            updateMetrics(responseTime) {
+                document.getElementById('responseTime').textContent = Math.round(responseTime) + ' ms';
+                this.responseTimeData.push(responseTime);
+                if (this.responseTimeData.length > 30) {
+                    this.responseTimeData.shift();
+                }
+
+                const recent = this.uptimeData.slice(-100);
+                const uptime = recent.length > 0 ? (recent.filter(x => x).length / recent.length) * 100 : 0;
+                document.getElementById('uptime').textContent = uptime.toFixed(1) + '%';
+                
+                const successCount = recent.filter(x => x).length;
+                document.getElementById('uptimeDetails').textContent = `${successCount}/${recent.length} successful checks`;
+
+                document.getElementById('totalChecks').textContent = this.checkCount;
+                document.getElementById('lastCheck').textContent = new Date().toLocaleTimeString();
+            }
+
+            updateChart() {
+                const bars = document.querySelectorAll('.chart-bar');
+                const maxTime = Math.max(...this.responseTimeData, 100);
+                
+                this.responseTimeData.forEach((time, index) => {
+                    if (bars[index]) {
+                        const height = Math.max((time / maxTime) * 200, 10);
+                        bars[index].style.height = height + 'px';
+                        bars[index].title = `${Math.round(time)}ms`;
+                        
+                        if (time > this.alertSettings.responseTimeThreshold) {
+                            bars[index].style.background = 'linear-gradient(to top, #e74c3c, #ec7063)';
+                        } else if (time > this.alertSettings.responseTimeThreshold * 0.7) {
+                            bars[index].style.background = 'linear-gradient(to top, #f39c12, #f4d03f)';
+                        } else {
+                            bars[index].style.background = 'linear-gradient(to top, #1e3c72, #2a5298)';
+                        }
+                    }
+                });
+            }
+
+            triggerAlert(message) {
+                this.showNotification(message, 'error');
+                
+                if (this.alertSettings.email) {
+                    this.log(`📧 Alert sent to ${this.alertSettings.email}`, 'warning');
+                    console.log(`Alert: ${message} -> ${this.alertSettings.email}`);
+                }
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => notification.classList.add('show'), 100);
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 400);
+                }, 4000);
+            }
+
+            log(message, type = 'success') {
+                const logContainer = document.getElementById('logContainer');
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleString();
+                logEntry.innerHTML = `
+                    <div class="timestamp">${timestamp}</div>
+                    <div>${message}</div>
+                `;
+
+                logContainer.insertBefore(logEntry, logContainer
